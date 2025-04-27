@@ -28,6 +28,18 @@ const getComponentNameById = async (componentId) => {
 };
 
 // --- Route: Handle GET for subscription validation (probe) --- //
+app.get('/', (req, res) => {
+    const validationToken = req.query.validationToken;
+
+    if (validationToken) {
+        console.log('Subscription probe received, returning validation token.');
+        res.status(200).send(validationToken); // Respond with plain text
+    } else {
+        res.status(404).send('Not found'); // Return 404 if no validationToken
+    }
+});
+
+// --- Route: Handle POST for webhook events --- //
 app.post('/', async (req, res) => {
     console.log('POST / received!');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
