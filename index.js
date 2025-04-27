@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const chalk = require('chalk');
 const app = express();
-const axiosRetry = require('axios-retry');
+const axiosRetry = require('axios-retry').default;
 const port = process.env.PORT || 3000;
 
 // Apply retry logic to axios globally (set it once)
