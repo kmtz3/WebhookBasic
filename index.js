@@ -1,9 +1,15 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-// Middleware to parse JSON payloads
+// Import the createSubscription router
+const createSubscription = require('./createSubscription');
+
+// Use the createSubscription router for /subscription-probe route
+app.use('/subscription-probe', createSubscription);
+
+// Middleware to parse JSON payloads (only once)
 app.use(express.json());
 
 // Access the Productboard token from environment variables
