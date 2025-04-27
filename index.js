@@ -19,9 +19,12 @@ const getComponentNameById = async (componentId) => {
                 'Authorization': `Bearer ${productboardToken}`,
             },
         });
-        return response.data.data.attributes.name;
+        
+        // Correctly return the component name from the response
+        const componentName = response.data.data.name;
+        return componentName;
     } catch (error) {
-        console.error('Error fetching component name:', error);
+        console.error('Error fetching component name:', error.response ? error.response.data : error);
         throw new Error('Failed to fetch component name');
     }
 };
