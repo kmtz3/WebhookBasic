@@ -51,7 +51,7 @@ app.post('/', async (req, res) => {
                     status: { name: 'Blocked' },
                     parent: { component: { id: componentId } },
                     name: componentName,
-                    description: "<p>Feature auto-created when component "${componentName}" was created.</p>"
+                    description: `<p>Feature auto-created when component "${componentName}" was created.</p>`
                 },
             };
 
