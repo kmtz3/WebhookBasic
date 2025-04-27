@@ -42,14 +42,20 @@ app.get('/', (req, res) => {
 // --- Route: Handle POST for webhook events --- //
 app.post('/', async (req, res) => {
     try {
+        console.log('POST / received!');
+        console.log('Request body:', JSON.stringify(req.body, null, 2)); // Pretty print body
+
+            res.status(202).send('POST received, processing...');
+
+
         const event = req.body.data;
-        
+
         if (event && event.type === 'component') {
             const componentId = event.id;
-            console.log(`Webhook received for component ID: ${componentId}`);
+            console.log(`Component Update: componentId = ${componentId}`);
 
             const componentName = await getComponentNameById(componentId);
-            console.log(`Component Name: ${componentName}`);
+            console.log(`Fetched Component Name: ${componentName}`);
 
             const featureData = {
                 data: {
@@ -60,6 +66,7 @@ app.post('/', async (req, res) => {
                 },
             };
 
+            console.log('Creating feature in Productboard...');
             const response = await axios.post(
                 'https://api.productboard.com/features',
                 featureData,
@@ -70,17 +77,18 @@ app.post('/', async (req, res) => {
                         'Authorization': `Bearer ${productboardToken}`,
                         'Content-Type': 'application/json',
                     },
-                    timeout: 5000, // Optional: timeout for feature creation
+                    timeout: 5000,
                 }
             );
 
-            console.log('Feature created successfully:', response.data);
+            console.log('✅ Feature created successfully:', JSON.stringify(response.data, null, 2));
             res.status(200).send('Feature created successfully!');
         } else {
+            console.error('❌ Invalid event type or missing data');
             res.status(400).send('Invalid event type or missing data');
         }
     } catch (error) {
-        console.error('Error creating feature:', error.response ? error.response.data : error.message);
+        console.error('❌ Error creating feature:', error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
         res.status(500).send('Error processing webhook');
     }
 });
