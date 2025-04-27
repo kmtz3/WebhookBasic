@@ -1,6 +1,5 @@
 const express = require('express');
 const axios = require('axios');
-const chalk = require('chalk');
 const app = express();
 const axiosRetry = require('axios-retry').default;
 const port = process.env.PORT || 3000;
@@ -50,8 +49,8 @@ app.get('/', (req, res) => {
 
 // --- Route: Handle POST for webhook events --- //
 app.post('/', async (req, res) => {
-    console.log(chalk.blue('POST / received!'));
-    console.log(chalk.green('Request body:', JSON.stringify(req.body, null, 2)));
+    console.log('POST / received!');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
 
     // ✅ Immediately acknowledge receipt
     res.status(202).send('POST received, processing...'); // Acknowledge that we received the POST request
@@ -61,12 +60,11 @@ app.post('/', async (req, res) => {
 
         if (event && event.eventType && (event.eventType === 'component.created' || event.eventType === 'component.updated')) {
             const componentId = event.id;
-            console.log(chalk.blue(`Component Event: componentId = ${componentId}`));
+            console.log(`Component Event: componentId = ${componentId}`);
 
             const componentName = await getComponentNameById(componentId);
-            console.log(chalk.green(`Fetched Component Name: ${componentName}`));
+            console.log(`Fetched Component Name: ${componentName}`);
 
-            
             const featureData = {
                 data: {
                     type: 'feature',
@@ -77,7 +75,7 @@ app.post('/', async (req, res) => {
                 }
             };
 
-            console.log(chalk.blue('Creating feature in Productboard...'));
+            console.log('Creating feature in Productboard...');
             const response = await axios.post(
                 'https://api.productboard.com/features',
                 featureData,
@@ -92,14 +90,15 @@ app.post('/', async (req, res) => {
                 }
             );
 
-            console.log(chalk.green('✅ Feature created successfully:', JSON.stringify(response.data, null, 2)));
+            console.log('✅ Feature created successfully:', JSON.stringify(response.data, null, 2));
         } else {
-            console.log(chalk.yellow('⚠️ Invalid event type or missing data'));
+            console.log('⚠️ Invalid event type or missing data');
         }
     } catch (error) {
-        console.log(chalk.red('❌ Error creating feature:', error.response ? JSON.stringify(error.response.data, null, 2) : error.message));
+        console.log('❌ Error creating feature:', error.response ? JSON.stringify(error.response.data, null, 2) : error.message);
     }
 });
+
 // --- Start server --- //
 app.listen(port, () => {
     console.log(`Webhook server running at http://localhost:${port}`);
