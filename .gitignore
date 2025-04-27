@@ -1,0 +1,10 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails folder
+.Thumbs.db
+
+# Finder folder
+.Trashes
