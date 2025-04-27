@@ -3,19 +3,13 @@ const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Import the createSubscription router
-const createSubscription = require('./createSubscription');
-
-// Use the createSubscription router for /subscription-probe route
-app.use('/subscription-probe', createSubscription);
-
 // Middleware to parse JSON payloads (only once)
 app.use(express.json());
 
 // Access the Productboard token from environment variables
 const productboardToken = process.env.PRODUCTBOARD_API_TOKEN;
 
-// Helper function to get component name by ID
+// --- Helper: Get component name by ID --- //
 const getComponentNameById = async (componentId) => {
     try {
         const response = await axios.get(`https://api.productboard.com/components/${componentId}`, {
@@ -24,46 +18,48 @@ const getComponentNameById = async (componentId) => {
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${productboardToken}`,
             },
+            timeout: 5000, // Optional: Add timeout to avoid hanging requests
         });
-        
-        // Correctly return the component name from the response
-        const componentName = response.data.data.name;
-        return componentName;
+        return response.data.data.name;
     } catch (error) {
         console.error('Error fetching component name:', error.response ? error.response.data : error);
         throw new Error('Failed to fetch component name');
     }
 };
 
-// Webhook route - listening for component update or creation
+// --- Route: Handle GET for subscription validation (probe) --- //
+app.get('/', (req, res) => {
+    const validationToken = req.query.validationToken;
+
+    if (validationToken) {
+        console.log('Subscription probe received, returning validation token.');
+        res.status(200).send(validationToken); // Respond with plain text
+    } else {
+        res.status(404).send('Not found'); // Return 404 if no validationToken
+    }
+});
+
+// --- Route: Handle POST for webhook events --- //
 app.post('/', async (req, res) => {
     try {
-        // Check if we have the event type (e.g., component updated or created)
-        if (req.body.data && req.body.data.type === 'component') {
-            const componentId = req.body.data.id; // Assuming the component ID is in 'id' field
+        const event = req.body.data;
+        
+        if (event && event.type === 'component') {
+            const componentId = event.id;
+            console.log(`Webhook received for component ID: ${componentId}`);
 
-            // Get the component name using the componentId
             const componentName = await getComponentNameById(componentId);
             console.log(`Component Name: ${componentName}`);
-            console.log(`Entity ID: ${componentId}`);
 
-            // Prepare the data for the new feature creation
             const featureData = {
                 data: {
                     type: 'feature',
-                    status: {
-                        name: 'Blocked',
-                    },
-                    parent: {
-                        component: {
-                            id: componentId,
-                        },
-                    },
+                    status: { name: 'Blocked' },
+                    parent: { component: { id: componentId } },
                     name: componentName,
                 },
             };
 
-            // Send the request to Productboard API to create the feature
             const response = await axios.post(
                 'https://api.productboard.com/features',
                 featureData,
@@ -74,6 +70,7 @@ app.post('/', async (req, res) => {
                         'Authorization': `Bearer ${productboardToken}`,
                         'Content-Type': 'application/json',
                     },
+                    timeout: 5000, // Optional: timeout for feature creation
                 }
             );
 
@@ -83,12 +80,12 @@ app.post('/', async (req, res) => {
             res.status(400).send('Invalid event type or missing data');
         }
     } catch (error) {
-        console.error('Error creating feature:', error);
+        console.error('Error creating feature:', error.response ? error.response.data : error.message);
         res.status(500).send('Error processing webhook');
     }
 });
 
-// Server setup
+// --- Start server --- //
 app.listen(port, () => {
     console.log(`Webhook server running at http://localhost:${port}`);
 });
