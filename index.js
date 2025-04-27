@@ -27,7 +27,7 @@ const getComponentNameById = async (componentId) => {
 };
 
 // Webhook route - listening for component update or creation
-app.post('/webhook', async (req, res) => {
+app.post('/', async (req, res) => {
     try {
         // Check if we have the event type (e.g., component updated or created)
         if (req.body.data && req.body.data.type === 'component') {
